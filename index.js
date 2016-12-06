@@ -1,7 +1,8 @@
 'use strict';
 
 const config = require('./config');
-const logger = require('log4js').getLogger('app');
+const log4js = require('log4js');
+const logger = log4js.getLogger('app');
 
 const _ = require('lodash');
 const cluster = require('cluster');
@@ -52,7 +53,14 @@ if (cluster.isMaster) {
     const express = require('express');
     let app = express();
     app.use(express.static(config.publicPath));
+    app.use(log4js.connectLogger(log4js.getLogger('express'), {level: log4js.levels.INFO}));
     app.use('/', require('./routes'));
+    app.use('/vod/', require('./routes/vod'));
+    app.use((error, req, res, next) => {
+        logger.error(error);
+        res.header('Content-Type', 'text/plain');
+        res.send(`Error: ${error.message}`);
+    });
     let server = app.listen(config.port, config.host, function() {
         logger.info('Start Server at %s:%d', this.address().address, this.address().port);
     });
