@@ -1,7 +1,6 @@
 'use strict';
 
 const config = require('../../config');
-const logger = require('log4js').getLogger('vod');
 
 const _ = require('lodash');
 const path = require('path');

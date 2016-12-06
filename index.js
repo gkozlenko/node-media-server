@@ -58,12 +58,6 @@ if (cluster.isMaster) {
     app.use(express.static(config.publicPath));
     app.use(log4js.connectLogger(log4js.getLogger('express'), {level: log4js.levels.INFO}));
     app.use('/', require('./routes'));
-    app.use('/vod/', require('./routes/vod'));
-    app.use((error, req, res, next) => {
-        logger.error(error);
-        res.header('Content-Type', 'text/plain');
-        res.send(`Error: ${error.message}`);
-    });
     let server = app.listen(config.port, config.host, function() {
         logger.info('Start Server at %s:%d', this.address().address, this.address().port);
     });
