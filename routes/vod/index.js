@@ -24,11 +24,11 @@ router.get(/^(.*)\/playlist\.m3u8$/, (req, res, next) => {
             throw new Error('Video file does not contain at least one video track.');
         }
         let duration = movie.relativeDuration();
-        let bandwidth = duration > 0 ? 8 * stat.size / duration : 0;
+        let bandwidth = duration > 0 ? Math.floor(8 * stat.size / duration) : 0;
         let playlist = [
             '#EXTM3U',
             '#EXT-X-VERSION:3',
-            `#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=${parseInt(bandwidth)},RESOLUTION=${videoTrack.width}x${videoTrack.height}`,
+            `#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=${bandwidth},RESOLUTION=${videoTrack.width}x${videoTrack.height}`,
             path.join(req.baseUrl, req.params[0], 'chunklist.m3u8').replace(/\\/g, '/')
         ];
         res.header('Content-Type', 'application/x-mpegURL');
@@ -55,7 +55,7 @@ router.get(/^(.*)\/chunklist\.m3u8$/, (req, res, next) => {
             '#EXTM3U',
             '#EXT-X-VERSION:3',
             `#EXT-X-TARGETDURATION:${config.fragmentDuration}`,
-            '#EXT-X-MEDIA-SEQUENCE:1',
+            '#EXT-X-MEDIA-SEQUENCE:1'
         ];
         for (let i = 0, l = fragments.length; i < l; i++) {
             playlist.push(`#EXTINF:${_.round(fragments[i].relativeDuration(), 2)},`);
@@ -73,7 +73,7 @@ router.get(/^(.*)\/chunklist\.m3u8$/, (req, res, next) => {
 
 router.get(/^(.*)\/media-(\d+)\.ts$/, (req, res, next) => {
     let fileName = path.join(config.mediaPath, req.params[0]);
-    let index = parseInt(req.params[1]);
+    let index = parseInt(req.params[1], 10);
     let file = null;
     return fs.openAsync(fileName, 'r').then((fd) => {
         file = fd;
@@ -95,12 +95,6 @@ router.get(/^(.*)\/media-(\d+)\.ts$/, (req, res, next) => {
             return fs.closeAsync(file);
         }
     });
-});
-
-router.use((error, req, res, next) => {
-    logger.error(error);
-    res.header('Content-Type', 'text/plain');
-    res.send(`Error: ${error.message}`);
 });
 
 module.exports = router;
