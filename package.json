@@ -1,0 +1,44 @@
+{
+  "name": "node-media-server",
+  "version": "1.0.0",
+  "description": "Node.js Media Server",
+  "license": "MIT",
+  "main": "index",
+  "author": {
+    "name": "Gennadiy Kozlenko",
+    "email": "gennadiy.kozlenko@gmail.com",
+    "url": "https://github.com/pipll/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pipll/node-media-server.git"
+  },
+  "engines": {
+    "node": ">=4.0.0"
+  },
+  "keywords": [
+    "video",
+    "media server",
+    "mp4",
+    "mov",
+    "hls",
+    "m3u8",
+    "mpeg-ts"
+  ],
+  "scripts": {
+    "prepublish": "npm prune",
+    "test": "mocha ./test/tests.js",
+    "start": "node ./index.js"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^3.2.0"
+  },
+  "dependencies": {
+    "bluebird": "^3.4.6",
+    "express": "^4.14.0",
+    "lodash": "^4.17.2",
+    "log4js": "^1.0.1",
+    "node-video-lib": "0.0.2"
+  }
+}
