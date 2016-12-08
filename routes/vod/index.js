@@ -33,11 +33,10 @@ router.use(/^(.*)\/(playlist\.m3u8|chunklist\.m3u8|media-\d+\.ts)$/, (req, res, 
 });
 
 router.get(/^(.*)\/playlist\.m3u8$/, (req, res) => {
-    let videoTrack = req.movie.videoTrack();
     let playlist = [
         '#EXTM3U',
         '#EXT-X-VERSION:3',
-        `#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=${req.movie.bandwidth()},RESOLUTION=${videoTrack.width}x${videoTrack.height}`,
+        `#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=${req.movie.bandwidth()},RESOLUTION=${req.movie.videoTrack().resolution()}`,
         path.join(req.baseUrl, req.params[0], 'chunklist.m3u8').replace(/\\/g, '/')
     ];
     res.header('Content-Type', 'application/x-mpegURL');
