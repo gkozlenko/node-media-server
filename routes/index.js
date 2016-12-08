@@ -1,6 +1,7 @@
 'use strict';
 
 const pkg = require('../package.json');
+const errors = require('../components/errors');
 const logger = require('log4js').getLogger('server');
 
 const _ = require('lodash');
@@ -24,7 +25,14 @@ router.use('/vod/', require('./vod'));
 router.use((error, req, res, next) => {
     logger.error(error);
     res.header('Content-Type', 'text/plain');
-    res.send(`Error: ${error.message}`);
+    if (error instanceof errors.HttpError) {
+        res.status(error.code);
+    } else if (error.code === 'ENOENT') {
+        res.status(404);
+    } else {
+        res.status(500);
+    }
+    res.send(`${error.name}: ${error.message}`);
 });
 
 module.exports = router;

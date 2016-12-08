@@ -39,6 +39,6 @@
     "express": "^4.14.0",
     "lodash": "^4.17.2",
     "log4js": "^1.0.1",
-    "node-video-lib": "0.0.2"
+    "node-video-lib": "0.0.3"
   }
 }
