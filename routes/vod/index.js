@@ -13,6 +13,7 @@ const VideoLib = require('node-video-lib');
 let router = express.Router();
 
 router.use(/^(.*)\/(playlist\.m3u8|chunklist\.m3u8|media-\d+\.ts)$/, (req, res, next) => {
+    let startTime = Date.now();
     return Promise.resolve().then(() => {
         let fileName = path.join(config.mediaPath, req.params[0]);
         let file = null;
@@ -28,6 +29,8 @@ router.use(/^(.*)\/(playlist\.m3u8|chunklist\.m3u8|media-\d+\.ts)$/, (req, res, 
             if (file !== null) {
                 return fs.closeAsync(file);
             }
+        }).then(() => {
+            req.logger.debug('Elapsed time:', (Date.now() - startTime) + 'ms', 'URL:', path.join(req.baseUrl, req.url).replace(/\\/g, '/'));
         });
     }).catch(next);
 });
