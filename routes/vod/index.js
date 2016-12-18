@@ -12,50 +12,45 @@ const VideoLib = require('node-video-lib');
 
 let router = express.Router();
 
-router.use(/^(.*)\/(playlist\.m3u8|chunklist\.m3u8|media-\d+\.ts)$/, (req, res, next) => {
+function openMovie(req, res, next) {
     let startTime = Date.now();
     return Promise.resolve().then(() => {
         let fileName = path.join(config.mediaPath, req.params[0]);
-        let file = null;
         return fs.openAsync(fileName, 'r').then(fd => {
-            file = fd;
-            let movie = VideoLib.MP4Parser.parse(file);
-            if (!movie.videoTrack()) {
-                throw new errors.ForbiddenError('Video file does not contain at least one video track');
-            }
-            req.movie = movie;
+            req.file = fd;
+            let movie = VideoLib.MP4Parser.parse(fd);
+            req.fragments = movie.fragments(config.fragmentDuration);
             next();
         }).finally(() => {
-            if (file !== null) {
-                return fs.closeAsync(file);
+            if (req.file !== null) {
+                return fs.closeAsync(req.file);
             }
         }).then(() => {
             req.logger.debug('Elapsed time:', (Date.now() - startTime) + 'ms', 'URL:', path.join(req.baseUrl, req.url).replace(/\\/g, '/'));
         });
     }).catch(next);
-});
+}
 
-router.get(/^(.*)\/playlist\.m3u8$/, (req, res) => {
+router.get(/^(.*)\/playlist\.m3u8$/, openMovie, (req, res) => {
     let playlist = [
         '#EXTM3U',
         '#EXT-X-VERSION:3',
-        `#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=${req.movie.bandwidth() << 0},RESOLUTION=${req.movie.resolution()}`,
+        `#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=${req.fragments.bandwidth() << 0},RESOLUTION=${req.fragments.resolution()}`,
         path.join(req.baseUrl, req.params[0], 'chunklist.m3u8').replace(/\\/g, '/')
     ];
     res.header('Content-Type', 'application/x-mpegURL');
     res.send(playlist.join("\n"));
 });
 
-router.get(/^(.*)\/chunklist\.m3u8$/, (req, res) => {
-    let fragments = req.movie.fragments(config.fragmentDuration);
+router.get(/^(.*)\/chunklist\.m3u8$/, openMovie, (req, res) => {
     let playlist = [
         '#EXTM3U',
         '#EXT-X-VERSION:3',
-        `#EXT-X-TARGETDURATION:${config.fragmentDuration}`,
+        `#EXT-X-TARGETDURATION:${req.fragments.fragmentDuration}`,
         '#EXT-X-MEDIA-SEQUENCE:1'
     ];
-    for (let i = 0, l = fragments.length; i < l; i++) {
-        playlist.push(`#EXTINF:${_.round(fragments[i].relativeDuration(), 2)},`);
+    for (let i = 0, l = req.fragments.length; i < l; i++) {
+        playlist.push(`#EXTINF:${_.round(req.fragments[i].relativeDuration(), 2)},`);
         playlist.push(path.join(req.baseUrl, req.params[0], `media-${i + 1}.ts`).replace(/\\/g, '/'));
     }
     playlist.push('#EXT-X-ENDLIST');
@@ -63,14 +58,13 @@ router.get(/^(.*)\/chunklist\.m3u8$/, (req, res) => {
     res.send(playlist.join("\n"));
 });
 
-router.get(/^(.*)\/media-(\d+)\.ts$/, (req, res) => {
+router.get(/^(.*)\/media-(\d+)\.ts$/, openMovie, (req, res) => {
     let index = parseInt(req.params[1], 10);
-    let fragments = req.movie.fragments(config.fragmentDuration);
-    if (fragments.length < index) {
+    if (req.fragments.length < index) {
         throw new errors.NotFoundError('Chunk not found');
     }
-    let fragment = fragments[index - 1];
-    let buffer = VideoLib.HLSPacketizer.packetize(fragment);
+    let fragment = req.fragments[index - 1];
+    let buffer = VideoLib.HLSPacketizer.packetize(fragment, req.file);
     res.header('Content-Type', 'video/MP2T');
     res.send(buffer);
 });
