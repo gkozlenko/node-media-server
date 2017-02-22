@@ -66,7 +66,8 @@ router.get(/^(.*)\/media-(\d+)\.ts$/, openMovie, (req, res) => {
         throw new errors.NotFoundError('Chunk not found');
     }
     let fragment = req.fragmentList.get(index - 1);
-    let buffer = VideoLib.HLSPacketizer.packetize(fragment, req.file);
+    let sampleBuffers = VideoLib.FragmentReader.readSamples(fragment, req.file);
+    let buffer = VideoLib.HLSPacketizer.packetize(fragment, sampleBuffers);
     res.header('Content-Type', 'video/MP2T');
     res.send(buffer);
 });
