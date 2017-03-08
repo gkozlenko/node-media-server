@@ -39,6 +39,7 @@
     "express": "^4.14.1",
     "lodash": "^4.17.4",
     "log4js": "^1.1.0",
-    "node-video-lib": "^1.1.0"
+    "md5": "^2.2.1",
+    "node-video-lib": "git@github.com:pipll/node-video-lib.git#feature/fragment-list-indexer"
   }
 }

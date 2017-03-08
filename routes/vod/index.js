@@ -9,22 +9,45 @@ const Promise = require('bluebird');
 const fs = Promise.promisifyAll(require('fs'));
 const express = require('express');
 const VideoLib = require('node-video-lib');
+const Indexer = require('../../components/indexer');
 
 let router = express.Router();
 
 function openMovie(req, res, next) {
     let startTime = Date.now();
     return Promise.resolve().then(() => {
-        let fileName = path.join(config.mediaPath, req.params[0]);
-        return fs.openAsync(fileName, 'r').then(fd => {
-            req.file = fd;
-            let movie = VideoLib.MP4Parser.parse(fd);
-            req.fragmentList = VideoLib.FragmentListBuilder.build(movie, config.fragmentDuration);
+        req.file = null;
+        req.index = null;
+        req.fragmentList = null;
+
+        let name = req.params[0];
+        let fileName = path.join(config.mediaPath, name);
+        let indexName = Indexer.getIndexName(name);
+
+        return Promise.all([
+            fs.openAsync(fileName, 'r').then((fd) => {
+                req.file = fd;
+            }),
+            fs.openAsync(indexName, 'r').then((fd) => {
+                req.index = fd;
+                req.fragmentList = VideoLib.FragmentListIndexer.read(req.index);
+            }).catch((err) => {
+                // Build index
+                console.warn(err);
+                process.send({method: 'index', name: name});
+            }),
+        ]).then(() => {
+            if (req.fragmentList === null) {
+                let movie = VideoLib.MP4Parser.parse(req.file);
+                req.fragmentList = VideoLib.FragmentListBuilder.build(movie, config.fragmentDuration);
+            }
             next();
         }).finally(() => {
-            if (req.file !== null) {
-                return fs.closeAsync(req.file);
-            }
+            return Promise.all([req.file, req.index].map((file) => {
+                if (file !== null) {
+                    return fs.closeAsync(file);
+                }
+            }));
         }).then(() => {
             req.logger.debug('Elapsed time:', (Date.now() - startTime) + 'ms', 'URL:', path.join(req.baseUrl, req.url).replace(/\\/g, '/'));
         });

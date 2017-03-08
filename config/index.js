@@ -13,5 +13,6 @@ module.exports = {
     shutdownClusterInterval: 1000,
     publicPath: path.resolve('./public'),
     mediaPath: path.resolve('./media'),
+    indexPath: path.resolve('./index'),
     fragmentDuration: 5,
 };
