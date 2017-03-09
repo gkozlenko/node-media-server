@@ -31,9 +31,7 @@ function openMovie(req, res, next) {
             fs.openAsync(indexName, 'r').then((fd) => {
                 req.index = fd;
                 req.fragmentList = VideoLib.FragmentListIndexer.read(req.index);
-            }).catch((err) => {
-                // Build index
-                console.warn(err);
+            }).catch(() => {
                 process.send({method: 'index', name: name});
             }),
         ]).then(() => {

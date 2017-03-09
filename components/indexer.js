@@ -12,14 +12,13 @@ class Indexer {
 
     static getIndexName(name) {
         let indexPart = md5(name);
-        //return path.join(config.indexPath, indexPart.slice(0, 2), indexPart.slice(2, 4), `${indexPart}.idx`);
-        return path.join(config.indexPath, `${indexPart}.idx`);
+        return path.join(config.indexPath, indexPart.slice(0, 2), indexPart.slice(2, 4), `${indexPart}.idx`);
     }
 
     static index(name) {
         let fileName = path.join(config.mediaPath, name);
         let indexName = Indexer.getIndexName(name);
-        let postfix = _.random(100000, 999999);
+        let tmpName = path.join(config.indexPath, `${_.random(100000, 999999)}.tmp`);
         let file = null;
         let index = null;
 
@@ -27,7 +26,7 @@ class Indexer {
             fs.openAsync(fileName, 'r').then((fd) => {
                 file = fd;
             }),
-            fs.openAsync(`${indexName}.${postfix}`, 'w').then((fd) => {
+            fs.openAsync(tmpName, 'w').then((fd) => {
                 index = fd;
             }),
         ]).then(() => {
@@ -41,8 +40,26 @@ class Indexer {
                 }
             }));
         }).then(() => {
-            return fs.renameAsync(`${indexName}.${postfix}`, indexName);
+            return Indexer.makeDirs(indexName).then(() => {
+                return fs.renameAsync(tmpName, indexName);
+            }).catch(() => {
+                return fs.unlinkAsync(tmpName);
+            });
         });
+    }
+
+    static makeDirs(indexName) {
+        let parts = path.relative(config.indexPath, path.dirname(indexName)).split(path.sep);
+        let promise = Promise.resolve(config.indexPath);
+        for (let part of parts) {
+            promise = promise.then((base) => {
+                let dir = path.join(base, part);
+                return fs.mkdirAsync(dir).then(() => {
+                    return dir;
+                });
+            });
+        }
+        return promise;
     }
 
 }
