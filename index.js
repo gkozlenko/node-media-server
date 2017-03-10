@@ -10,6 +10,7 @@ const logger = log4js.getLogger('app');
 const _ = require('lodash');
 const cluster = require('cluster');
 
+const MessageQueue = require('./components/message_queue');
 const Indexer = require('./components/indexer');
 
 let shutdownInterval = null;
@@ -18,10 +19,11 @@ function startWorker() {
     const worker = cluster.fork().on('online', () => {
         logger.info('Start worker #%d.', worker.id);
     }).on('message', (message) => {
-        if (message.method === 'index') {
-            console.log('Index file:', message.name);
-            Indexer.index(message.name);
-        }
+        MessageQueue.add(message.queue, message);
+        // if (message.queue === 'index') {
+        //     console.log('Index file:', message.name);
+        //     Indexer.index(message.name);
+        // }
     }).on('exit', (status) => {
         if ((worker.exitedAfterDisconnect || worker.suicide) === true || status === 0) {
             logger.info('Worker #%d was killed.', worker.id);

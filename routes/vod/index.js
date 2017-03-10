@@ -32,7 +32,7 @@ function openMovie(req, res, next) {
                 req.index = fd;
                 req.fragmentList = VideoLib.FragmentListIndexer.read(req.index);
             }).catch(() => {
-                process.send({method: 'index', name: name});
+                process.send({queue: 'index', name: name});
             }),
         ]).then(() => {
             if (req.fragmentList === null) {
