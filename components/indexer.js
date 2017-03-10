@@ -15,10 +15,14 @@ class Indexer {
         return path.join(config.indexPath, indexPart.slice(0, 2), indexPart.slice(2, 4), `${indexPart}.idx`);
     }
 
+    static getTempName(name) {
+        path.join(config.indexPath, `${md5(name)}.${_.random(100000, 999999)}.tmp`);
+    }
+
     static index(name) {
         let fileName = path.join(config.mediaPath, name);
         let indexName = Indexer.getIndexName(name);
-        let tmpName = path.join(config.indexPath, `${_.random(100000, 999999)}.tmp`);
+        let tmpName = Indexer.getTempName(name);
         let file = null;
         let index = null;
 
