@@ -16,8 +16,9 @@ class MessageQueue {
         queues[queue].messages.push(message);
     }
 
-    static receive() {
-        return Promise.resolve();
+    static receive(queue) {
+        let messages = queues[queue] ? queues[queue].messages : [];
+        return Promise.resolve(messages.pop());
     }
 
 }
