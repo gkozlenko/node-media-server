@@ -1,35 +1,28 @@
 'use strict';
 
-/* eslint no-process-exit: 0 */
-/* eslint global-require: 0 */
-
 const config = require('./config');
 const log4js = require('log4js');
-const logger = log4js.getLogger('app');
-
 const _ = require('lodash');
 const cluster = require('cluster');
+const path = require('path');
+
+const logger = log4js.getLogger('app');
 
 const MessageQueue = require('./components/message_queue');
-const Indexer = require('./components/indexer');
 
 let shutdownInterval = null;
 
-function startWorker() {
-    const worker = cluster.fork().on('online', () => {
-        logger.info('Start worker #%d.', worker.id);
+function startWorker(name) {
+    const worker = cluster.fork({ WORKER_NAME: name }).on('online', () => {
+        logger.info('Start %s worker #%d.', name, worker.id);
     }).on('message', (message) => {
         MessageQueue.add(message.queue, message);
-        // if (message.queue === 'index') {
-        //     console.log('Index file:', message.name);
-        //     Indexer.index(message.name);
-        // }
     }).on('exit', (status) => {
         if ((worker.exitedAfterDisconnect || worker.suicide) === true || status === 0) {
-            logger.info('Worker #%d was killed.', worker.id);
+            logger.info('Worker %s #%d was killed.', name, worker.id);
         } else {
-            logger.warn('Worker #%d was died. Replace it with a new one.', worker.id);
-            startWorker();
+            logger.warn('Worker %s #%d was died. Replace it with a new one.', name, worker.id);
+            startWorker(name);
         }
     });
 }
@@ -50,7 +43,7 @@ function shutdownCluster() {
                 if (_.size(cluster.workers) === 0) {
                     process.exit();
                 }
-            }, config.shutdownClusterInterval);
+            }, config.shutdownInterval);
         } else {
             process.exit();
         }
@@ -58,27 +51,31 @@ function shutdownCluster() {
 }
 
 if (cluster.isMaster) {
-    for (let i = 0; i < config.workers; i++) {
-        startWorker();
-    }
-} else {
-    const express = require('express');
-    let app = express();
-    app.use(express.static(config.publicPath));
-    app.use(log4js.connectLogger(log4js.getLogger('express'), {level: log4js.levels.INFO}));
-    app.use('/', require('./routes'));
-    let server = app.listen(config.port, config.host, function() {
-        logger.info('Start Server at %s:%d', this.address().address, this.address().port);
+    _.each(config.workers, (conf, name) => {
+        if (conf.enabled) {
+            for (let i = 0; i < conf.count; i++) {
+                startWorker(name);
+            }
+        }
     });
-    process.on('message', message => {
+} else {
+    const name = process.env.WORKER_NAME;
+    const WorkerClass = require(path.join(__dirname, 'workers', `${name}.js`));
+    let worker = null;
+    if (WorkerClass) {
+        worker = new WorkerClass(name, config.workers[name]);
+        worker.start();
+        worker.on('stop', () => {
+            process.exit();
+        });
+    }
+    process.on('message', (message) => {
         if (message === 'shutdown') {
-            let stopTimeout = setTimeout(() => {
+            if (worker) {
+                worker.stop();
+            } else {
                 process.exit();
-            }, config.shutdownWorkerTimeout);
-            server.close(() => {
-                clearTimeout(stopTimeout);
-                process.exit();
-            });
+            }
         }
     });
 }

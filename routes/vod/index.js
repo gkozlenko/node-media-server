@@ -31,8 +31,16 @@ function openMovie(req, res, next) {
             fs.openAsync(indexName, 'r').then((fd) => {
                 req.index = fd;
                 req.fragmentList = VideoLib.FragmentListIndexer.read(req.index);
-            }).catch(() => {
-                process.send({queue: 'index', name: name});
+            }).catch((err) => {
+                let promise = Promise.resolve();
+                if (err.code !== 'ENOENT') {
+                    promise = fs.unlinkAsync(indexName).catch(() => {
+                        req.logger.warn('Cannot remove invalid index file:', indexName);
+                    });
+                }
+                return promise.then(() => {
+                    process.send({queue: 'index', name: name});
+                });
             }),
         ]).then(() => {
             if (req.fragmentList === null) {
