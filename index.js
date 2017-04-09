@@ -54,9 +54,11 @@ if (cluster.isMaster) {
     }
 } else {
     const express = require('express');
+    const cors = require('cors');
     let app = express();
     app.use(express.static(config.publicPath));
     app.use(log4js.connectLogger(log4js.getLogger('express'), {level: log4js.levels.INFO}));
+    app.use(cors());
     app.use('/', require('./routes'));
     let server = app.listen(config.port, config.host, function() {
         logger.info('Start Server at %s:%d', this.address().address, this.address().port);
