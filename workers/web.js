@@ -5,6 +5,7 @@ const Worker = require('../components/worker');
 
 const log4js = require('log4js');
 const express = require('express');
+const cors = require('cors');
 
 class WebWorker extends Worker {
 
@@ -13,6 +14,7 @@ class WebWorker extends Worker {
         this.app = express();
         this.app.use(express.static(config.publicPath));
         this.app.use(log4js.connectLogger(this.logger, {level: log4js.levels.INFO}));
+        this.app.use(cors());
         this.app.use('/', require('../routes'));
     }
 
