@@ -16,7 +16,7 @@ class Indexer {
     }
 
     static getTempName(name) {
-        path.join(config.indexPath, `${md5(name)}.${_.random(100000, 999999)}.tmp`);
+        return path.join(config.indexPath, `${md5(name)}.${_.random(100000, 999999)}.tmp`);
     }
 
     static index(name) {

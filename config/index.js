@@ -26,7 +26,7 @@ module.exports = {
         indexer: {
             enabled: true,
             count: 1,
-            timeout: 100,
+            timeout: 5000,
         },
     },
 };

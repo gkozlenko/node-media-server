@@ -1,8 +1,5 @@
 'use strict';
 
-const _ = require('lodash');
-const Promise = require('bluebird');
-
 const queues = {};
 
 class MessageQueue {
@@ -18,7 +15,7 @@ class MessageQueue {
 
     static receive(queue) {
         let messages = queues[queue] ? queues[queue].messages : [];
-        return Promise.resolve(messages.pop());
+        return messages.pop();
     }
 
 }
