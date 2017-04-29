@@ -3,7 +3,6 @@
 const config = require('../config');
 const Worker = require('../components/worker');
 const Indexer = require('../components/indexer');
-
 const Promise = require('bluebird');
 
 class IndexerWorker extends Worker {
@@ -11,16 +10,14 @@ class IndexerWorker extends Worker {
     constructor(name, conf) {
         super(name, conf);
         this.stopped = false;
-        this.promise = Promise.resolve();
+        this.queue = [];
 
-        // Start pooling
+        // Getting messages
         process.on('message', (message) => {
-            console.log('Message from master:', message);
-            if (message.action === 'receiveQueue' && message.queue === 'index') {
+            this.logger.debug('Message from master:', message);
+            if (message.action === 'index') {
                 if (message.data) {
-                    this.promise = this.promise.then(() => {
-                        return message.data;
-                    });
+                    this.queue.push(message.data);
                 }
             }
         });
@@ -37,18 +34,18 @@ class IndexerWorker extends Worker {
 
     _startHandling() {
         if (!this.stopped) {
-            process.send({action: 'receiveQueue', queue: 'index'});
-            return this.promise.then((data) => {
+            return Promise.resolve().then(() => {
+                let data = this.queue.pop();
                 if (data) {
-                    this.logger.info('Index file %s.', data.name);
+                    this.logger.info(`Index file: ${data.name}`);
                     return Indexer.index(data.name);
-                } else {
-                    return Promise.delay(this.conf.timeout);
                 }
             }).catch((err) => {
-                console.log(err);
+                this.logger.error(`Cannot index file: ${err.message}`, err);
             }).finally(() => {
-                return this._startHandling();
+                return Promise.delay(this.conf.timeout).then(() => {
+                    return this._startHandling();
+                });
             });
         } else {
             this.emit('stop');

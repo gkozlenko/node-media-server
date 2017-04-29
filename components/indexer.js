@@ -60,6 +60,11 @@ class Indexer {
                 let dir = path.join(base, part);
                 return fs.mkdirAsync(dir).then(() => {
                     return dir;
+                }, (err) => {
+                    if (err.code === 'EEXIST') {
+                        return dir;
+                    }
+                    throw err;
                 });
             });
         }

@@ -39,7 +39,7 @@ function openMovie(req, res, next) {
                     });
                 }
                 return promise.then(() => {
-                    process.send({action: 'addQueue', queue: 'index', data: {name: name}});
+                    process.send({action: 'index', data: {name: name}});
                 });
             }),
         ]).then(() => {
