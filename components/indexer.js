@@ -4,8 +4,7 @@ const config = require('../config');
 const _ = require('lodash');
 const path = require('path');
 const md5 = require('md5');
-const Promise = require('bluebird');
-const fs = Promise.promisifyAll(require('fs'));
+const fs = require('fs');
 const VideoLib = require('node-video-lib');
 
 class Indexer {
@@ -23,52 +22,42 @@ class Indexer {
         let fileName = path.join(config.mediaPath, name);
         let indexName = Indexer.getIndexName(name);
         let tmpName = Indexer.getTempName(name);
+
         let file = null;
         let index = null;
 
-        return Promise.all([
-            fs.openAsync(fileName, 'r').then((fd) => {
-                file = fd;
-            }),
-            fs.openAsync(tmpName, 'w').then((fd) => {
-                index = fd;
-            }),
-        ]).then(() => {
-            let movie = VideoLib.MP4Parser.parse(file);
+        try {
+            file = fs.openSync(fileName, 'r');
+            index = fs.openSync(tmpName, 'w');
+            let movie = VideoLib.MovieParser.parse(file);
             let fragmentList = VideoLib.FragmentListBuilder.build(movie, config.fragmentDuration);
             VideoLib.FragmentListIndexer.index(fragmentList, index);
-        }).finally(() => {
-            return Promise.all([file, index].map((file) => {
-                if (file !== null) {
-                    return fs.closeAsync(file);
-                }
-            }));
-        }).then(() => {
-            return Indexer.makeDirs(indexName).then(() => {
-                return fs.renameAsync(tmpName, indexName);
-            }).catch(() => {
-                return fs.unlinkAsync(tmpName);
-            });
-        });
+        } finally {
+            fs.closeSync(file);
+            fs.closeSync(index);
+        }
+
+        if (fs.existsSync(tmpName)) {
+            try {
+                Indexer.makeDirs(path.dirname(indexName));
+                fs.renameSync(tmpName, indexName);
+            } catch (ex) {
+                fs.unlinkSync(tmpName);
+                throw ex;
+            }
+        }
     }
 
-    static makeDirs(indexName) {
-        let parts = path.relative(config.indexPath, path.dirname(indexName)).split(path.sep);
-        let promise = Promise.resolve(config.indexPath);
+    static makeDirs(dirs) {
+        let parts = path.relative(config.indexPath, dirs).split(path.sep);
+        let base = config.indexPath;
         for (let part of parts) {
-            promise = promise.then((base) => {
-                let dir = path.join(base, part);
-                return fs.mkdirAsync(dir).then(() => {
-                    return dir;
-                }, (err) => {
-                    if (err.code === 'EEXIST') {
-                        return dir;
-                    }
-                    throw err;
-                });
-            });
+            let dir = path.join(base, part);
+            if (!fs.existsSync(dir)) {
+                fs.mkdirSync(dir);
+            }
+            base = dir;
         }
-        return promise;
     }
 
 }

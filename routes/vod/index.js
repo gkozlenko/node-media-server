@@ -44,7 +44,7 @@ function openMovie(req, res, next) {
             }),
         ]).then(() => {
             if (req.fragmentList === null) {
-                let movie = VideoLib.MP4Parser.parse(req.file);
+                let movie = VideoLib.MovieParser.parse(req.file);
                 req.fragmentList = VideoLib.FragmentListBuilder.build(movie, config.fragmentDuration);
             }
             next();
