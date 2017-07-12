@@ -41,6 +41,8 @@
     "lodash": "^4.17.4",
     "log4js": "^1.1.1",
     "md5": "^2.2.1",
-    "node-video-lib": "1.4.0"
+    "moment": "^2.18.1",
+    "node-video-lib": "1.4.0",
+    "xmlbuilder": "^9.0.1"
   }
 }
