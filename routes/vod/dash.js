@@ -19,14 +19,48 @@ router.get(/^(.*)\/manifest\.mpd$/, Movie.openMovie, (req, res) => {
 
     let xml = xmlBuilder.create('MPD', {encoding: 'UTF-8'})
         .att('xmlns', 'urn:mpeg:dash:schema:mpd:2011')
-        .att('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance')
-        .att('xmlns:xlink', 'http://www.w3.org/1999/xlink')
-        .att('xsi:schemaLocation', 'urn:mpeg:DASH:schema:MPD:2011 http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd')
-        .att('profiles', 'urn:mpeg:dash:profile:isoff-live:2011')
-        .att('type', 'static')
-        .att('publishTime', moment().utc().format())
-        .att('mediaPresentationDuration', moment.duration(duration, 's').toISOString())
+        .att('profiles', 'urn:mpeg:dash:profile:full:2011')
         .att('minBufferTime', 'PT1.5S');
+
+    let period = xml.ele('Period').att('duration', moment.duration(duration, 's').toISOString());
+
+    if (req.fragmentList.videoExtraData !== null) {
+        let segment = period.ele('AdaptationSet')
+            .att('mimeType', 'video/mp4')
+            .ele('Representation')
+            .att('id', 'video')
+            .att('bandwidth', 0)
+            .att('width', req.fragmentList.width)
+            .att('height', req.fragmentList.height)
+            .ele('SegmentTemplate')
+            .att('timescale', req.fragmentList.timescale)
+            .att('media', 'video-$Number$.ts')
+            .att('initialization', 'video.sidx');
+        let timestamp = 0;
+        for (let i = 0, l = req.fragmentList.count(); i < l; i++) {
+            let duration = req.fragmentList.get(i).duration;
+            segment.ele('S').att('t', timestamp).att('d', duration);
+            timestamp += duration;
+        }
+    }
+
+    if (req.fragmentList.audioExtraData !== null) {
+        let segment = period.ele('AdaptationSet')
+            .att('mimeType', 'audio/mp4')
+            .ele('Representation')
+            .att('id', 'audio')
+            .att('bandwidth', 0)
+            .ele('SegmentTemplate')
+            .att('timescale', req.fragmentList.timescale)
+            .att('media', 'audio-$Number$.ts')
+            .att('initialization', 'audio.sidx');
+        let timestamp = 0;
+        for (let i = 0, l = req.fragmentList.count(); i < l; i++) {
+            let duration = req.fragmentList.get(i).duration;
+            segment.ele('S').att('t', timestamp).att('d', duration);
+            timestamp += duration;
+        }
+    }
 
     res.header('Content-Type', 'text/xml');
     res.send(xml.end({pretty: true}));
