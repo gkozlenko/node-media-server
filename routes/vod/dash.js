@@ -24,16 +24,16 @@ router.get(/^(.*)\/manifest\.mpd$/, Movie.openMovie, (req, res) => {
 
     let period = xml.ele('Period').att('duration', moment.duration(duration, 's').toISOString());
 
-    if (req.fragmentList.videoExtraData !== null) {
+    if (req.fragmentList.video !== null) {
         let segment = period.ele('AdaptationSet')
             .att('mimeType', 'video/mp4')
             .ele('Representation')
             .att('id', 'video')
-            .att('bandwidth', 0)
-            .att('width', req.fragmentList.width)
-            .att('height', req.fragmentList.height)
+            .att('bandwidth', duration > 0 ? Math.round(8 * req.fragmentList.video.size / duration) : 0)
+            .att('width', req.fragmentList.video.width)
+            .att('height', req.fragmentList.video.height)
             .ele('SegmentTemplate')
-            .att('timescale', req.fragmentList.timescale)
+            .att('timescale', req.fragmentList.video.timescale)
             .att('media', 'video-$Number$.ts')
             .att('initialization', 'video.sidx');
         let timestamp = 0;
@@ -44,14 +44,14 @@ router.get(/^(.*)\/manifest\.mpd$/, Movie.openMovie, (req, res) => {
         }
     }
 
-    if (req.fragmentList.audioExtraData !== null) {
+    if (req.fragmentList.audio !== null) {
         let segment = period.ele('AdaptationSet')
             .att('mimeType', 'audio/mp4')
             .ele('Representation')
             .att('id', 'audio')
-            .att('bandwidth', 0)
+            .att('bandwidth', duration > 0 ? Math.round(8 * req.fragmentList.audio.size / duration) : 0)
             .ele('SegmentTemplate')
-            .att('timescale', req.fragmentList.timescale)
+            .att('timescale', req.fragmentList.audio.timescale)
             .att('media', 'audio-$Number$.ts')
             .att('initialization', 'audio.sidx');
         let timestamp = 0;

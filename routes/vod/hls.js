@@ -15,11 +15,15 @@ const Movie = require('../../components/movie');
 
 router.get(/^(.*)\/playlist\.m3u8$/, Movie.openMovie, (req, res) => {
     let duration = req.fragmentList.relativeDuration();
-    let bandwidth = duration > 0 ? 8 * fs.fstatSync(req.file).size / duration : 0;
+    let bandwidth = duration > 0 ? Math.round(8 * req.fragmentList.size() / duration) : 0;
+    let resolution = '';
+    if (req.fragmentList.video) {
+        resolution = `${req.fragmentList.video.width}x${req.fragmentList.video.height}`;
+    }
     let playlist = [
         '#EXTM3U',
         '#EXT-X-VERSION:3',
-        `#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=${bandwidth << 0},RESOLUTION=${req.fragmentList.resolution()}`,
+        `#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=${bandwidth},RESOLUTION=${resolution}`,
         path.join(req.baseUrl, req.params[0], 'chunklist.m3u8').replace(/\\/g, '/')
     ];
     res.header('Content-Type', 'application/x-mpegURL');

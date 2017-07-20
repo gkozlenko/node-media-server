@@ -42,7 +42,7 @@
     "log4js": "^1.1.1",
     "md5": "^2.2.1",
     "moment": "^2.18.1",
-    "node-video-lib": "1.4.0",
+    "node-video-lib": "https://github.com/pipll/node-video-lib.git#feature-mpeg-dash-packetizer",
     "xmlbuilder": "^9.0.1"
   }
 }
