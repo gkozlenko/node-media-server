@@ -1,9 +1,9 @@
 'use strict';
 
-const config = require('../config');
 const Worker = require('../components/worker');
 const Indexer = require('../components/indexer');
 const Promise = require('bluebird');
+const fs = require('fs');
 
 class IndexerWorker extends Worker {
 
@@ -37,8 +37,11 @@ class IndexerWorker extends Worker {
             return Promise.resolve().then(() => {
                 let data = this.queue.pop();
                 if (data) {
-                    this.logger.info(`Index file: ${data.name}`);
-                    return Indexer.index(data.name);
+                    let indexName = Indexer.getIndexName(data.name);
+                    if (!fs.existsSync(indexName)) {
+                        this.logger.info(`Index file: ${data.name}`);
+                        Indexer.index(data.name);
+                    }
                 }
             }).catch((err) => {
                 this.logger.error(`Cannot index file: ${err.message}`, err);
