@@ -6,8 +6,7 @@ const logger = require('log4js').getLogger('server');
 
 const _ = require('lodash');
 const express = require('express');
-
-let router = express.Router();
+const router = express.Router();
 
 router.use((req, res, next) => {
     req.logger = logger;
