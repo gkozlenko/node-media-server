@@ -1,12 +1,9 @@
 'use strict';
 
-const config = require('../../config');
 const errors = require('../../components/errors');
 
 const _ = require('lodash');
 const path = require('path');
-const Promise = require('bluebird');
-const fs = Promise.promisifyAll(require('fs'));
 const express = require('express');
 const router = express.Router();
 

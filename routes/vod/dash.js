@@ -6,12 +6,11 @@ const errors = require('../../components/errors');
 const _ = require('lodash');
 const path = require('path');
 const moment = require('moment');
-const Promise = require('bluebird');
-const fs = Promise.promisifyAll(require('fs'));
 const xmlBuilder = require('xmlbuilder');
 const express = require('express');
 const router = express.Router();
 
+const VideoLib = require('node-video-lib');
 const Movie = require('../../components/movie');
 
 router.get(/^(.*)\/manifest\.mpd$/, Movie.openMovie, (req, res) => {
@@ -66,6 +65,20 @@ router.get(/^(.*)\/manifest\.mpd$/, Movie.openMovie, (req, res) => {
 
     res.header('Content-Type', 'text/xml');
     res.send(xml.end({pretty: true}));
+});
+
+router.get(/^(.*)\/(audio|video)\.sidx/, Movie.openMovie, (req, res) => {
+    let type = req.params[1];
+    req.logger.info('Type:', type);
+    let buffer = VideoLib.DASHPacketizer[`${type}Index`](req.fragmentList);
+    res.send(buffer);
+});
+
+router.get(/^(.*)\/(audio|video)-(\d+)\.ts$/, Movie.openMovie, (req, res) => {
+    let type = req.params[1];
+    let index = parseInt(req.params[2], 10);
+    req.logger.info('Type:', type, 'Index', index);
+    res.end();
 });
 
 module.exports = router;
