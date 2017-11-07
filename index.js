@@ -11,7 +11,7 @@ let shutdownInterval = null;
 let workers = {};
 
 function startWorker(name) {
-    const worker = cluster.fork({ WORKER_NAME: name }).on('online', () => {
+    const worker = cluster.fork({WORKER_NAME: name}).on('online', () => {
         logger.info('Start %s worker #%d.', name, worker.id);
         workers[name] = workers[name] || [];
         workers[name].push(worker.id);
