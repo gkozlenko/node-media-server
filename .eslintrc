@@ -70,7 +70,12 @@
     "curly": "error",
     "eqeqeq": "error",
     "no-use-before-define": "error",
-    "no-unused-vars": "error",
+    "no-unused-vars": [
+      "error",
+      {
+        "argsIgnorePattern": "next"
+      }
+    ],
     "no-unexpected-multiline": "error",
     "no-multi-str": "error",
     "no-trailing-spaces": "error",

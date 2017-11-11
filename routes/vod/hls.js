@@ -37,7 +37,7 @@ router.get(/^(.*)\/playlist\.m3u8$/, Movie.openMovie, (req, res) => {
         '#EXT-X-VERSION:3',
         `#EXT-X-STREAM-INF:${streamAttributesPairs.join(',')}`,
         path.join(req.baseUrl, req.params[0], 'chunklist.m3u8').replace(/\\/g, '/'),
-        ''
+        '',
     ];
     res.header('Content-Type', 'application/x-mpegURL');
     res.send(playlist.join('\n'));
@@ -48,7 +48,7 @@ router.get(/^(.*)\/chunklist\.m3u8$/, Movie.openMovie, (req, res) => {
         '#EXTM3U',
         '#EXT-X-VERSION:3',
         `#EXT-X-TARGETDURATION:${req.fragmentList.fragmentDuration}`,
-        '#EXT-X-MEDIA-SEQUENCE:1'
+        '#EXT-X-MEDIA-SEQUENCE:1',
     ];
     for (let i = 0, l = req.fragmentList.count(); i < l; i++) {
         playlist.push(`#EXTINF:${_.round(req.fragmentList.get(i).relativeDuration(), 2)},`);
