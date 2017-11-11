@@ -5,10 +5,14 @@ const errors = require('../../components/errors');
 const _ = require('lodash');
 const path = require('path');
 const express = require('express');
+const crypto = require('crypto');
 const router = express.Router();
 
 const VideoLib = require('node-video-lib');
 const Movie = require('../../components/movie');
+
+const drmKey = crypto.randomBytes(16);
+const drmIv = crypto.randomBytes(16);
 
 router.get(/^(.*)\/playlist\.m3u8$/, Movie.openMovie, (req, res) => {
     let streamAttributes = {};
@@ -37,18 +41,20 @@ router.get(/^(.*)\/playlist\.m3u8$/, Movie.openMovie, (req, res) => {
         '#EXT-X-VERSION:3',
         `#EXT-X-STREAM-INF:${streamAttributesPairs.join(',')}`,
         path.join(req.baseUrl, req.params[0], 'chunklist.m3u8').replace(/\\/g, '/'),
-        ''
+        '',
     ];
     res.header('Content-Type', 'application/x-mpegURL');
     res.send(playlist.join('\n'));
 });
 
 router.get(/^(.*)\/chunklist\.m3u8$/, Movie.openMovie, (req, res) => {
+    let keyUrl = path.join(req.baseUrl, req.params[0], 'drm.key').replace(/\\/g, '/');
     let playlist = [
         '#EXTM3U',
         '#EXT-X-VERSION:3',
         `#EXT-X-TARGETDURATION:${req.fragmentList.fragmentDuration}`,
-        '#EXT-X-MEDIA-SEQUENCE:1'
+        '#EXT-X-MEDIA-SEQUENCE:1',
+        `#EXT-X-KEY:METHOD=AES-128,URI="${keyUrl}",IV=0x${drmIv.toString('hex')}`,
     ];
     for (let i = 0, l = req.fragmentList.count(); i < l; i++) {
         playlist.push(`#EXTINF:${_.round(req.fragmentList.get(i).relativeDuration(), 2)},`);
@@ -68,8 +74,13 @@ router.get(/^(.*)\/media-(\d+)\.ts$/, Movie.openMovie, (req, res) => {
     let fragment = req.fragmentList.get(index - 1);
     let sampleBuffers = VideoLib.FragmentReader.readSamples(fragment, req.file);
     let buffer = VideoLib.HLSPacketizer.packetize(fragment, sampleBuffers);
+    let cipher = crypto.createCipheriv('aes-128-cbc', drmKey, drmIv);
     res.header('Content-Type', 'video/MP2T');
-    res.send(buffer);
+    res.send(Buffer.concat([cipher.update(buffer), cipher.final()]));
+});
+
+router.get(/^(.*)\/drm\.key$/, (req, res) => {
+    res.send(drmKey);
 });
 
 module.exports = router;

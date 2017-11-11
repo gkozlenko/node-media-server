@@ -20,7 +20,7 @@ module.exports = {
     workers: {
         web: {
             enabled: true,
-            count: require('os').cpus().length,
+            count: 1, //require('os').cpus().length,
             shutdownTimeout: 5000,
         },
         indexer: {
