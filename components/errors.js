@@ -41,5 +41,5 @@ module.exports = {
     HttpError,
     NotFoundError,
     ForbiddenError,
-    UnauthorizedError
+    UnauthorizedError,
 };

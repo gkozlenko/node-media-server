@@ -33,8 +33,12 @@ class Indexer {
             let fragmentList = VideoLib.FragmentListBuilder.build(movie, config.fragmentDuration);
             VideoLib.FragmentListIndexer.index(fragmentList, index);
         } finally {
-            fs.closeSync(file);
-            fs.closeSync(index);
+            if (file !== null) {
+                fs.closeSync(file);
+            }
+            if (index !== null) {
+                fs.closeSync(index);
+            }
         }
 
         if (fs.existsSync(tmpName)) {

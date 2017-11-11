@@ -57,5 +57,5 @@ function openMovie(req, res, next) {
 }
 
 module.exports = {
-    openMovie
+    openMovie,
 };

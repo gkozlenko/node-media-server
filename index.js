@@ -22,7 +22,7 @@ function startWorker(name) {
                 case 'index': {
                     let indexer = cluster.workers[_.sample(workers.indexer || [])];
                     if (indexer) {
-                        indexer.send(message)
+                        indexer.send(message);
                     } else {
                         logger.debug('Indexer worker not found.');
                     }
