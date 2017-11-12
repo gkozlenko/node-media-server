@@ -5,6 +5,8 @@ const config = require('../config');
 const path = require('path');
 const Promise = require('bluebird');
 const fs = Promise.promisifyAll(require('fs'));
+const md5 = require('md5');
+const crypto = require('crypto');
 
 const VideoLib = require('node-video-lib');
 const Indexer = require('./indexer');
@@ -56,6 +58,22 @@ function openMovie(req, res, next) {
     }).catch(next);
 }
 
+function movieKey(name) {
+    return Buffer.from(md5(`${name}.${config.drmSeed}.key`), 'hex');
+}
+
+function movieIv(name) {
+    return Buffer.from(md5(`${name}.${config.drmSeed}.iv`), 'hex');
+}
+
+function encryptChunk(name, buffer) {
+    let cipher = crypto.createCipheriv('aes-128-cbc', movieKey(name), movieIv(name));
+    return Buffer.concat([cipher.update(buffer), cipher.final()]);
+}
+
 module.exports = {
     openMovie,
+    movieKey,
+    movieIv,
+    encryptChunk,
 };
