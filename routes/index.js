@@ -31,7 +31,7 @@ router.use((error, req, res, next) => {
     } else {
         res.status(500);
     }
-    res.send(`${error.name}: ${error.message}`);
+    res.send(`${error.name}: ${error.message}\n`);
 });
 
 module.exports = router;

@@ -1,5 +1,6 @@
 'use strict';
 
+const config = require('../../config');
 const errors = require('../../components/errors');
 
 const _ = require('lodash');
@@ -50,8 +51,10 @@ router.get(/^(.*)\/chunklist\.m3u8$/, Movie.openMovie, (req, res) => {
         '#EXT-X-VERSION:3',
         `#EXT-X-TARGETDURATION:${req.fragmentList.fragmentDuration}`,
         '#EXT-X-MEDIA-SEQUENCE:1',
-        `#EXT-X-KEY:METHOD=AES-128,URI="${keyUrl}",IV=0x${Movie.movieIv(req.params[0]).toString('hex')}`,
     ];
+    if (config.drmEnabled) {
+        playlist.push(`#EXT-X-KEY:METHOD=AES-128,URI="${keyUrl}",IV=0x${Movie.movieIv(req.params[0]).toString('hex')}`);
+    }
     for (let i = 0, l = req.fragmentList.count(); i < l; i++) {
         playlist.push(`#EXTINF:${_.round(req.fragmentList.get(i).relativeDuration(), 2)},`);
         playlist.push(path.join(req.baseUrl, req.params[0], `media-${i + 1}.ts`).replace(/\\/g, '/'));
@@ -65,17 +68,25 @@ router.get(/^(.*)\/chunklist\.m3u8$/, Movie.openMovie, (req, res) => {
 router.get(/^(.*)\/media-(\d+)\.ts$/, Movie.openMovie, (req, res) => {
     let index = parseInt(req.params[1], 10);
     if (req.fragmentList.count() < index) {
-        throw new errors.NotFoundError('Chunk not found');
+        throw new errors.NotFoundError('Chunk Not Found');
     }
     let fragment = req.fragmentList.get(index - 1);
     let sampleBuffers = VideoLib.FragmentReader.readSamples(fragment, req.file);
     let buffer = VideoLib.HLSPacketizer.packetize(fragment, sampleBuffers);
     res.header('Content-Type', 'video/MP2T');
-    res.send(Movie.encryptChunk(req.params[0], buffer));
+    if (config.drmEnabled) {
+        res.send(Movie.encryptChunk(req.params[0], buffer));
+    } else {
+        res.send(buffer);
+    }
 });
 
 router.get(/^(.*)\/drm\.key$/, (req, res) => {
-    res.send(Movie.movieKey(req.params[0]));
+    if (config.drmEnabled) {
+        res.send(Movie.movieKey(req.params[0]));
+    } else {
+        throw new errors.NotFoundError('Key Not Found');
+    }
 });
 
 module.exports = router;

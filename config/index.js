@@ -14,6 +14,7 @@ module.exports = {
     indexPath: path.resolve('./index'),
 
     fragmentDuration: 5,
+    drmEnabled: false,
     drmSeed: 'DRM SEED',
 
     shutdownInterval: 1000,
