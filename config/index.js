@@ -14,13 +14,14 @@ module.exports = {
     indexPath: path.resolve('./index'),
 
     fragmentDuration: 5,
+    drmSeed: 'DRM SEED',
 
     shutdownInterval: 1000,
 
     workers: {
         web: {
             enabled: true,
-            count: 1, //require('os').cpus().length,
+            count: require('os').cpus().length,
             shutdownTimeout: 5000,
         },
         indexer: {
