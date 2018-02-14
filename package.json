@@ -43,6 +43,6 @@
     "lodash": "^4.17.4",
     "log4js": "^1.1.1",
     "md5": "^2.2.1",
-    "node-video-lib": "^2.0.2"
+    "node-video-lib": "^2.0.3"
   }
 }
