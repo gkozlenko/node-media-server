@@ -46,7 +46,7 @@ function shutdownCluster() {
         clearInterval(shutdownInterval);
         if (_.size(cluster.workers) > 0) {
             logger.info('Shutdown workers:', _.size(cluster.workers));
-            _.each(cluster.workers, worker => {
+            _.each(cluster.workers, (worker) => {
                 try {
                     worker.send({action: 'shutdown'});
                 } catch (err) {

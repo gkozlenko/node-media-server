@@ -1,5 +1,5 @@
 'use strict';
 
-describe('node-media-server', function () {
+describe('node-media-server', () => {
 
 });

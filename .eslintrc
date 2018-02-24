@@ -34,6 +34,7 @@
       "error",
       {
         "anonymous": "always",
+        "asyncArrow": "always",
         "named": "never"
       }
     ],
@@ -83,7 +84,19 @@
       "error",
       "unix"
     ],
-    "eol-last": "error"
+    "eol-last": "error",
+    "arrow-parens": [
+      "error",
+      "as-needed",
+      {
+        "requireForBlockBody": true
+      }
+    ],
+    "arrow-spacing": "error",
+    "prefer-arrow-callback": "error",
+    "no-return-assign": "off",
+    "no-var": "error",
+    "yoda": "off"
   },
   "env": {
     "node": true,
