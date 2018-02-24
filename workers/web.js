@@ -3,17 +3,25 @@
 const config = require('../config');
 const Worker = require('../components/worker');
 
-const log4js = require('log4js');
+const path = require('path');
 const express = require('express');
 const cors = require('cors');
+const morgan = require('morgan');
+const logrotate = require('logrotate-stream');
 
 class WebWorker extends Worker {
 
     constructor(name, conf) {
         super(name, conf);
         this.app = express();
+        this.app.use(morgan('combined', {
+            stream: logrotate({
+                file: path.join(config.logsPath, 'access.log'),
+                size: config.logSize,
+                keep: config.logKeep,
+            }),
+        }));
         this.app.use(express.static(config.publicPath));
-        this.app.use(log4js.connectLogger(this.logger, {level: log4js.levels.INFO}));
         this.app.use(cors());
         this.app.use('/', require('../routes'));
     }

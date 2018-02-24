@@ -7,6 +7,7 @@ const Promise = require('bluebird');
 const fs = Promise.promisifyAll(require('fs'));
 const md5 = require('md5');
 const crypto = require('crypto');
+const logger = require('intel').getLogger('movie');
 
 const VideoLib = require('node-video-lib');
 const Indexer = require('./indexer');
@@ -33,7 +34,7 @@ function openMovie(req, res, next) {
                 let promise = Promise.resolve();
                 if (err.code !== 'ENOENT') {
                     promise = fs.unlinkAsync(indexName).catch(() => {
-                        req.logger.warn('Cannot remove invalid index file:', indexName);
+                        logger.warn('Cannot remove invalid index file:', indexName);
                     });
                 }
                 return promise.then(() => {
@@ -53,7 +54,7 @@ function openMovie(req, res, next) {
                 }
             }));
         }).then(() => {
-            req.logger.debug('Elapsed time:', (Date.now() - startTime) + 'ms', 'URL:', path.join(req.baseUrl, req.url).replace(/\\/g, '/'));
+            logger.debug('Elapsed time:', (Date.now() - startTime) + 'ms', 'URL:', path.join(req.baseUrl, req.url).replace(/\\/g, '/'));
         });
     }).catch(next);
 }

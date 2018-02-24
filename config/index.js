@@ -1,21 +1,26 @@
 'use strict';
 
 const path = require('path');
+const intel = require('intel');
+const logrotate = require('logrotate-stream');
 
-process.env.NODE_ENV = process.env.NODE_ENV || 'development';
-process.env.LOG4JS_CONFIG = path.join(__dirname, '..', 'log4js.json');
-
-module.exports = {
+// Configuration
+const config = {
     host: '0.0.0.0',
     port: 3000,
 
     publicPath: path.resolve('./public'),
     mediaPath: path.resolve('./media'),
     indexPath: path.resolve('./index'),
+    logsPath: path.resolve('./logs'),
 
     fragmentDuration: 5,
     drmEnabled: false,
     drmSeed: 'DRM SEED',
+
+    logLevel: intel.DEBUG,
+    logSize: '50m',
+    logKeep: 10,
 
     shutdownInterval: 1000,
 
@@ -32,3 +37,44 @@ module.exports = {
         },
     },
 };
+
+// Setup logger
+intel.setLevel(config.logLevel);
+const fileFormatter = new intel.Formatter({
+    format: '[%(date)s] [%(levelname)s] %(name)s - %(message)s',
+});
+const consoleFormatter = new intel.Formatter({
+    format: '[%(date)s] [%(levelname)s] %(name)s - %(message)s',
+    colorize: true,
+});
+intel.addHandler(new intel.handlers.Console({
+    formatter: consoleFormatter,
+}));
+intel.addHandler(new intel.handlers.Stream({
+    stream: logrotate({
+        file: path.join(config.logsPath, 'debug.log'),
+        size: config.logSize,
+        keep: config.logKeep,
+    }),
+    formatter: fileFormatter,
+}));
+intel.addHandler(new intel.handlers.Stream({
+    level: intel.INFO,
+    stream: logrotate({
+        file: path.join(config.logsPath, 'info.log'),
+        size: config.logSize,
+        keep: config.logKeep,
+    }),
+    formatter: fileFormatter,
+}));
+intel.addHandler(new intel.handlers.Stream({
+    level: intel.WARN,
+    stream: logrotate({
+        file: path.join(config.logsPath, 'error.log'),
+        size: config.logSize,
+        keep: config.logKeep,
+    }),
+    formatter: fileFormatter,
+}));
+
+module.exports = config;

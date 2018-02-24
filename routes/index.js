@@ -2,15 +2,16 @@
 
 const pkg = require('../package.json');
 const errors = require('../components/errors');
-const logger = require('log4js').getLogger('server');
+const logger = require('intel').getLogger('server');
 
 const _ = require('lodash');
 const express = require('express');
 const router = express.Router();
 
+const SERVER_NAME = `${_.upperFirst(_.camelCase(pkg.name))}/${pkg.version}`;
+
 router.use((req, res, next) => {
-    req.logger = logger;
-    res.header('Server', `${_.upperFirst(_.camelCase(pkg.name))}/${pkg.version}`);
+    res.header('Server', SERVER_NAME);
     next();
 });
 

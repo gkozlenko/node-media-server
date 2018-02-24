@@ -1,6 +1,6 @@
 'use strict';
 
-const log4js = require('log4js');
+const intel = require('intel');
 const EventEmitter = require('events');
 
 class Worker extends EventEmitter {
@@ -9,7 +9,7 @@ class Worker extends EventEmitter {
         super();
         this.name = name;
         this.conf = conf;
-        this.logger = log4js.getLogger(`worker-${name}`);
+        this.logger = intel.getLogger(`worker-${name}`);
     }
 
     start() {

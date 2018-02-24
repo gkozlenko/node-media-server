@@ -2,10 +2,9 @@
 
 const cluster = require('cluster');
 const config = require('./config');
-const log4js = require('log4js');
 const _ = require('lodash');
 const path = require('path');
-const logger = log4js.getLogger('app');
+const logger = require('intel').getLogger('app');
 
 let shutdownInterval = null;
 let workers = {};
