@@ -14,7 +14,7 @@
     "url": "https://github.com/pipll/node-media-server.git"
   },
   "engines": {
-    "node": ">=4.5.0"
+    "node": ">=6.0.0"
   },
   "keywords": [
     "video",
@@ -26,25 +26,25 @@
     "mpeg-ts"
   ],
   "scripts": {
-    "prepublish": "npm prune",
+    "prepare": "npm prune",
     "test": "mocha ./test/tests.js",
     "start": "node ./index.js",
     "lint": "eslint \"./**/*.js\""
   },
   "devDependencies": {
-    "chai": "^4.1.2",
-    "eslint": "^4.18.2",
-    "mocha": "^5.0.4"
+    "chai": "^4.2.0",
+    "eslint": "^5.11.1",
+    "mocha": "^5.2.0"
   },
   "dependencies": {
-    "bluebird": "^3.5.1",
-    "cors": "^2.8.4",
-    "express": "^4.16.2",
+    "bluebird": "^3.5.3",
+    "cors": "^2.8.5",
+    "express": "^4.16.4",
     "intel": "^1.2.0",
-    "lodash": "^4.17.4",
+    "lodash": "^4.17.11",
     "logrotate-stream": "^0.2.5",
     "md5": "^2.2.1",
-    "morgan": "^1.9.0",
-    "node-video-lib": "^2.0.5"
+    "morgan": "^1.9.1",
+    "node-video-lib": "^2.1.0"
   }
 }

@@ -31,7 +31,7 @@ function startWorker(name) {
         }
     }).on('exit', (status) => {
         workers[name] = _.without(workers[name], worker.id);
-        if ((worker.exitedAfterDisconnect || worker.suicide) === true || status === 0) {
+        if (worker.exitedAfterDisconnect === true || status === 0) {
             logger.info('Worker %s #%d was killed.', name, worker.id);
         } else {
             logger.warn('Worker %s #%d was died. Replace it with a new one.', name, worker.id);
