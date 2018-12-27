@@ -45,6 +45,6 @@
     "logrotate-stream": "^0.2.5",
     "md5": "^2.2.1",
     "morgan": "^1.9.1",
-    "node-video-lib": "^2.1.0"
+    "node-video-lib": "^2.1.1"
   }
 }
