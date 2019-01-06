@@ -5,7 +5,7 @@
   "license": "MIT",
   "main": "index",
   "author": {
-    "name": "Gennadiy Kozlenko",
+    "name": "Gennady Kozlenko",
     "email": "gennadiy.kozlenko@gmail.com",
     "url": "https://github.com/pipll/"
   },
@@ -21,6 +21,7 @@
     "media server",
     "mp4",
     "mov",
+    "flv",
     "hls",
     "m3u8",
     "mpeg-ts"
@@ -33,7 +34,7 @@
   },
   "devDependencies": {
     "chai": "^4.2.0",
-    "eslint": "^5.11.1",
+    "eslint": "^5.12.0",
     "mocha": "^5.2.0"
   },
   "dependencies": {
@@ -45,6 +46,6 @@
     "logrotate-stream": "^0.2.5",
     "md5": "^2.2.1",
     "morgan": "^1.9.1",
-    "node-video-lib": "^2.1.2"
+    "node-video-lib": "^2.1.3"
   }
 }
