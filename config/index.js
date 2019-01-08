@@ -15,6 +15,7 @@ const config = {
     logsPath: path.resolve('./logs'),
 
     fragmentDuration: 10,
+
     drmEnabled: false,
     drmSeed: 'DRM SEED',
 
