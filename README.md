@@ -1,15 +1,15 @@
 # node-media-server
 
-[![Build Status](https://travis-ci.org/pipll/node-media-server.svg?branch=master)](https://travis-ci.org/pipll/node-media-server)
-[![Maintainability](https://api.codeclimate.com/v1/badges/830b5f04b8b895a4c543/maintainability)](https://codeclimate.com/github/pipll/node-media-server/maintainability)
-[![GitHub License](https://img.shields.io/github/license/pipll/node-media-server.svg)](https://github.com/pipll/node-media-server/blob/master/LICENSE)
+[![Build Status](https://travis-ci.org/gkozlenko/node-media-server.svg?branch=master)](https://travis-ci.org/gkozlenko/node-media-server)
+[![Maintainability](https://api.codeclimate.com/v1/badges/3e8a4f2eb6218a5141a3/maintainability)](https://codeclimate.com/github/gkozlenko/node-media-server/maintainability)
+[![GitHub License](https://img.shields.io/github/license/gkozlenko/node-media-server.svg)](https://github.com/gkozlenko/node-media-server/blob/master/LICENSE)
 
 Node.js Media Server / VOD / HLS / DRM
 
 ## Installation
 
 ```bash
-git clone https://github.com/pipll/node-media-server.git
+git clone https://github.com/gkozlenko/node-media-server.git
 cd node-media-server
 npm install
 ```
