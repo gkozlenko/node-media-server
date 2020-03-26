@@ -43,7 +43,7 @@
     "express": "^4.17.1",
     "intel": "^1.2.0",
     "lodash": "^4.17.15",
-    "logrotate-stream": "^0.2.5",
+    "logrotate-stream": "^0.2.6",
     "md5": "^2.2.1",
     "morgan": "^1.10.0",
     "node-video-lib": "^2.2.0"
