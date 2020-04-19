@@ -3,6 +3,8 @@
 [![Build Status](https://travis-ci.org/gkozlenko/node-media-server.svg?branch=master)](https://travis-ci.org/gkozlenko/node-media-server)
 [![Maintainability](https://api.codeclimate.com/v1/badges/3e8a4f2eb6218a5141a3/maintainability)](https://codeclimate.com/github/gkozlenko/node-media-server/maintainability)
 [![GitHub License](https://img.shields.io/github/license/gkozlenko/node-media-server.svg)](https://github.com/gkozlenko/node-media-server/blob/master/LICENSE)
+[![Donate using PayPal](https://img.shields.io/badge/paypal-donate-green.svg)](https://www.paypal.me/pipll)
+[![Buy me a Coffee](https://img.shields.io/badge/buy%20me%20a%20coffee-donate-green.svg)](https://www.buymeacoffee.com/NIUeF95)
 
 Node.js Media Server / VOD / HLS / DRM
 
