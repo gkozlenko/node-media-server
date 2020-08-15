@@ -34,17 +34,17 @@
   },
   "devDependencies": {
     "chai": "^4.2.0",
-    "eslint": "^6.8.0",
-    "mocha": "^7.1.1"
+    "eslint": "^7.7.0",
+    "mocha": "^8.1.1"
   },
   "dependencies": {
     "bluebird": "^3.7.2",
     "cors": "^2.8.5",
     "express": "^4.17.1",
     "intel": "^1.2.0",
-    "lodash": "^4.17.19",
-    "logrotate-stream": "^0.2.6",
-    "md5": "^2.2.1",
+    "lodash": "^4.17.20",
+    "logrotate-stream": "^0.2.7",
+    "md5": "^2.3.0",
     "morgan": "^1.10.0",
     "node-video-lib": "^2.2.0"
   }
