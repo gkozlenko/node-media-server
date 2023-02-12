@@ -3,11 +3,14 @@
 const config = require('../config');
 
 const path = require('path');
-const Promise = require('bluebird');
-const fs = Promise.promisifyAll(require('fs'));
+const fs = require('fs');
 const md5 = require('md5');
 const crypto = require('crypto');
 const logger = require('intel').getLogger('movie');
+
+const openFile = require('util').promisify(fs.open);
+const closeFile = require('util').promisify(fs.close);
+const unlinkFile = require('util').promisify(fs.unlink);
 
 const VideoLib = require('node-video-lib');
 const Indexer = require('./indexer');
@@ -24,16 +27,16 @@ function openMovie(req, res, next) {
         let indexName = Indexer.getIndexName(name);
 
         return Promise.all([
-            fs.openAsync(fileName, 'r').then((fd) => {
+            openFile(fileName, 'r').then((fd) => {
                 req.file = fd;
             }),
-            fs.openAsync(indexName, 'r').then((fd) => {
+            openFile(indexName, 'r').then((fd) => {
                 req.index = fd;
                 req.fragmentList = VideoLib.FragmentListIndexer.read(req.index);
             }).catch((err) => {
                 let promise = Promise.resolve();
                 if (err.code !== 'ENOENT') {
-                    promise = fs.unlinkAsync(indexName).catch(() => {
+                    promise = unlinkFile(indexName).catch(() => {
                         logger.warn('Cannot remove invalid index file:', indexName);
                     });
                 }
@@ -50,7 +53,7 @@ function openMovie(req, res, next) {
         }).finally(() => {
             return Promise.all([req.file, req.index].map((file) => {
                 if (file !== null) {
-                    return fs.closeAsync(file);
+                    return closeFile(file);
                 }
             }));
         }).then(() => {

@@ -2,7 +2,6 @@
 
 const Worker = require('../components/worker');
 const Indexer = require('../components/indexer');
-const Promise = require('bluebird');
 const fs = require('fs');
 
 class IndexerWorker extends Worker {
@@ -46,7 +45,7 @@ class IndexerWorker extends Worker {
             }).catch((err) => {
                 this.logger.error(`Cannot index file: ${err.message}`, err);
             }).finally(() => {
-                return Promise.delay(this.conf.timeout).then(() => {
+                return new Promise(resolve => setTimeout(resolve, this.conf.timeout)).then(() => {
                     return this._startHandling();
                 });
             });
