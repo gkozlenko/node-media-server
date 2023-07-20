@@ -1,0 +1,11 @@
+version: '3'
+
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./media:/app/media:ro
+      - ./index:/app/index:rw
+      - ./logs:/app/logs:rw
