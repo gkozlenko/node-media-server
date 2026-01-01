@@ -32,7 +32,7 @@ const config = {
     // Path to log files
     logsPath: path.resolve('./logs'),
 
-    // Video chunk duration
+    // Video chunk duration (in seconds)
     fragmentDuration: 10,
 
     // DRM configuration
@@ -40,9 +40,9 @@ const config = {
     drmSeed: 'DRM SEED',
 
     // Logger configuration
-    logLevel: intel.DEBUG,
-    logSize: '50m',
-    logKeep: 10,
+    logLevel: 'debug', // 'info', 'warn' and 'error' also available
+    logSize: 50 * 1024 * 1024, // maximum log size in bytes
+    logKeep: 10, // how many rotated log files to keep
 
     shutdownInterval: 1000,
 
