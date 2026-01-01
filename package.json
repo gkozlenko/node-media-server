@@ -14,7 +14,7 @@
     "url": "https://github.com/gkozlenko/node-media-server.git"
   },
   "engines": {
-    "node": ">=6.0.0"
+    "node": ">=10.0.0"
   },
   "keywords": [
     "video",
@@ -32,16 +32,16 @@
     "lint": "eslint \"./**/*.js\""
   },
   "devDependencies": {
-    "eslint": "^7.32.0"
+    "@eslint/js": "^9.39.2",
+    "eslint": "^9.39.2"
   },
   "dependencies": {
     "cors": "^2.8.5",
-    "express": "^4.19.2",
-    "intel": "^1.2.0",
+    "express": "^4.22.1",
     "lodash": "^4.17.21",
-    "logrotate-stream": "^0.2.9",
     "md5": "^2.3.0",
-    "morgan": "^1.10.0",
-    "node-video-lib": "^2.3.1"
+    "morgan": "^1.10.1",
+    "node-video-lib": "^2.4.0",
+    "winston": "^3.19.0"
   }
 }

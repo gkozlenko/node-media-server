@@ -7,20 +7,34 @@ const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
-const logrotate = require('logrotate-stream');
+const winston = require('winston');
 
 class WebWorker extends Worker {
 
     constructor(name, conf) {
         super(name, conf);
         this.app = express();
-        this.app.use(morgan('combined', {
-            stream: logrotate({
-                file: path.join(config.logsPath, 'access.log'),
-                size: config.logSize,
-                keep: config.logKeep,
-            }),
-        }));
+
+        // access logger
+        const accessLogger = winston.createLogger({
+            transports: [
+                new winston.transports.File({
+                    filename: path.join(config.logsPath, 'access.log'),
+                    maxsize: config.logSize,
+                    maxFiles: config.logKeep,
+                    tailable: true,
+                    level: 'info',
+                    format: winston.format.printf(({ message }) => message.trim()),
+                }),
+            ],
+        });
+        const morganStream = {
+            write: (message) => {
+                accessLogger.info(message);
+            },
+        };
+        this.app.use(morgan('combined', { stream: morganStream }));
+
         this.app.use(express.static(config.publicPath));
         this.app.use(cors());
         this.app.use('/', require('../routes'));

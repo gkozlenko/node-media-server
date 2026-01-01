@@ -1,12 +1,12 @@
 'use strict';
 
 const config = require('../config');
+const logger = require('./logger').getLogger('movie');
 
 const path = require('path');
 const fs = require('fs');
 const md5 = require('md5');
 const crypto = require('crypto');
-const logger = require('intel').getLogger('movie');
 
 const openFile = require('util').promisify(fs.open);
 const closeFile = require('util').promisify(fs.close);
@@ -15,7 +15,7 @@ const unlinkFile = require('util').promisify(fs.unlink);
 const VideoLib = require('node-video-lib');
 const Indexer = require('./indexer');
 
-function openMovie(req, res, next) {
+function openMovie(req, _res, next) {
     let startTime = Date.now();
     return Promise.resolve().then(() => {
         req.file = null;
@@ -37,7 +37,7 @@ function openMovie(req, res, next) {
                 let promise = Promise.resolve();
                 if (err.code !== 'ENOENT') {
                     promise = unlinkFile(indexName).catch(() => {
-                        logger.warn('Cannot remove invalid index file:', indexName);
+                        logger.warn('Cannot remove invalid index file: %s', indexName);
                     });
                 }
                 return promise.then(() => {
@@ -57,7 +57,7 @@ function openMovie(req, res, next) {
                 }
             }));
         }).then(() => {
-            logger.debug('Elapsed time:', (Date.now() - startTime) + 'ms', 'URL:', path.join(req.baseUrl, req.url).replace(/\\/g, '/'));
+            logger.debug('Elapsed time: %s, URL: %s', (Date.now() - startTime) + 'ms', path.join(req.baseUrl, req.url).replace(/\\/g, '/'));
         });
     }).catch(next);
 }

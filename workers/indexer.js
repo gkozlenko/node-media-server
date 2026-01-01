@@ -13,7 +13,7 @@ class IndexerWorker extends Worker {
 
         // Getting messages
         process.on('message', (message) => {
-            this.logger.debug('Message from master:', message);
+            this.logger.debug('Message from master: %o', message);
             if (message.action === 'index') {
                 if (message.data) {
                     this.queue.push(message.data);
@@ -38,12 +38,12 @@ class IndexerWorker extends Worker {
                 if (data) {
                     let indexName = Indexer.getIndexName(data.name);
                     if (!fs.existsSync(indexName)) {
-                        this.logger.info(`Index file: ${data.name}`);
+                        this.logger.info('Index file: %s', data.name);
                         Indexer.index(data.name);
                     }
                 }
             }).catch((err) => {
-                this.logger.error(`Cannot index file: ${err.message}`, err);
+                this.logger.error('Unable to index file', err);
             }).finally(() => {
                 return new Promise(resolve => setTimeout(resolve, this.conf.timeout)).then(() => {
                     return this._startHandling();

@@ -1,6 +1,6 @@
 'use strict';
 
-const intel = require('intel');
+const logger = require('./logger');
 const EventEmitter = require('events');
 
 class Worker extends EventEmitter {
@@ -9,7 +9,7 @@ class Worker extends EventEmitter {
         super();
         this.name = name;
         this.conf = conf;
-        this.logger = intel.getLogger(`worker-${name}`);
+        this.logger = logger.getLogger(`worker-${name}`);
     }
 
     start() {

@@ -2,9 +2,9 @@
 
 const cluster = require('cluster');
 const config = require('./config');
+const logger = require('./components/logger').getLogger('app');
 const _ = require('lodash');
 const path = require('path');
-const logger = require('intel').getLogger('app');
 
 let shutdownInterval = null;
 let workers = {};
@@ -41,7 +41,7 @@ function startWorker(name) {
 }
 
 function shutdownCluster() {
-    if (cluster.isMaster) {
+    if (cluster.isPrimary) {
         clearInterval(shutdownInterval);
         if (_.size(cluster.workers) > 0) {
             logger.info('Shutdown workers:', _.size(cluster.workers));
@@ -63,7 +63,7 @@ function shutdownCluster() {
     }
 }
 
-if (cluster.isMaster) {
+if (cluster.isPrimary) {
     _.each(config.workers, (conf, name) => {
         if (conf.enabled) {
             for (let i = 0; i < conf.count; i++) {
