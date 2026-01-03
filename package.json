@@ -39,9 +39,8 @@
     "cors": "^2.8.5",
     "express": "^5.2.0",
     "lodash": "^4.17.21",
-    "md5": "^2.3.0",
     "morgan": "^1.10.1",
-    "node-video-lib": "^2.4.0",
+    "node-video-lib": "^2.4.1",
     "winston": "^3.19.0"
   },
   "overrides": {

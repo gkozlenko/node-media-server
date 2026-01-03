@@ -5,7 +5,6 @@ const logger = require('./logger').getLogger('movie');
 
 const path = require('path');
 const fs = require('fs');
-const md5 = require('md5');
 const crypto = require('crypto');
 
 const openFile = require('util').promisify(fs.open);
@@ -63,11 +62,11 @@ function openMovie(req, _res, next) {
 }
 
 function movieKey(name) {
-    return Buffer.from(md5(`${name}.${config.drmSeed}.key`), 'hex');
+    return crypto.createHash('md5').update(`${name}.${config.drmSeed}.key`).digest();
 }
 
 function movieIv(name) {
-    return Buffer.from(md5(`${name}.${config.drmSeed}.iv`), 'hex');
+    return crypto.createHash('md5').update(`${name}.${config.drmSeed}.iv`).digest();
 }
 
 function encryptChunk(name, buffer) {

@@ -3,25 +3,21 @@
 const config = require('../config');
 const _ = require('lodash');
 const path = require('path');
-const md5 = require('md5');
 const fs = require('fs');
+const crypto = require('crypto');
 const VideoLib = require('node-video-lib');
 
 class Indexer {
 
     static getIndexName(name) {
-        let indexPart = md5(name);
+        let indexPart = crypto.createHash('md5').update(name).digest('hex');
         return path.join(config.indexPath, indexPart.slice(0, 2), indexPart.slice(2, 4), `${indexPart}.idx`);
-    }
-
-    static getTempName(name) {
-        return path.join(config.indexPath, `${md5(name)}.${_.random(100000, 999999)}.tmp`);
     }
 
     static index(name) {
         let fileName = path.join(config.mediaPath, name);
         let indexName = Indexer.getIndexName(name);
-        let tmpName = Indexer.getTempName(name);
+        let tmpName = path.join(config.indexPath, `${crypto.randomBytes(16).toString('hex')}.tmp`);
 
         let file = null;
         let index = null;
