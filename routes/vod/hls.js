@@ -57,7 +57,7 @@ router.get(/^(.*)\/chunklist\.m3u8$/, Movie.openMovie, (req, res) => {
         playlist.push(`#EXT-X-KEY:METHOD=AES-128,URI="${keyUrl}",IV=0x${Movie.movieIv(req.params[0]).toString('hex')}`);
     }
     for (let i = 0, l = req.fragmentList.count(); i < l; i++) {
-        playlist.push(`#EXTINF:${req.fragmentList.get(i).relativeDuration().toFixed(1)},`);
+        playlist.push(`#EXTINF:${req.fragmentList.get(i).relativeDuration().toFixed(3)},`);
         playlist.push(path.join(req.baseUrl, req.params[0], `media-${i + 1}.ts`).replace(/\\/g, '/'));
     }
     playlist.push('#EXT-X-ENDLIST');

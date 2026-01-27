@@ -40,7 +40,9 @@ function openMovie(req, _res, next) {
                     });
                 }
                 return promise.then(() => {
-                    process.send({action: 'index', data: {name: name}});
+                    if (config.workers.indexer.enabled) {
+                        process.send({action: 'index', data: {name: name}});
+                    }
                 });
             }),
         ]).then(() => {
