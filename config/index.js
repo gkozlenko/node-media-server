@@ -2,38 +2,56 @@
 
 const path = require('path');
 
-// Configuration
 const config = {
-    host: '0.0.0.0',
-    port: 3000,
-
-    publicPath: path.resolve('./public'),
-    mediaPath: path.resolve('./media'),
-    indexPath: path.resolve('./index'),
-    logsPath: path.resolve('./logs'),
-
-    fragmentDuration: 5,
-
-    drmEnabled: false,
-    drmSeed: 'DRM SEED',
-
-    logLevel: 'debug',
-    logSize: 50 * 1024 * 1024, // 50 Mb
-    logKeep: 10,
-
-    shutdownInterval: 1000,
+    server: {
+        // Timeout for graceful shutdown (in milliseconds)
+        shutdownTimeout: 10000,
+    },
 
     workers: {
-        web: {
-            enabled: true,
-            count: require('os').cpus().length,
-            shutdownTimeout: 5000,
-        },
-        indexer: {
-            enabled: true,
-            count: 1,
-            timeout: 5000,
-        },
+        // Number of media worker threads
+        count: require('os').cpus().length,
+        // Timeout for worker graceful shutdown
+        shutdownTimeout: 5000,
+    },
+
+    web: {
+        // Host and port for the web server
+        host: '0.0.0.0',
+        port: 3000,
+        // Path to static files
+        staticPath: path.resolve('./public'),
+        // Timeout for worker requests (in milliseconds)
+        workerTimeout: 1000,
+        // Timeout for web server graceful shutdown
+        shutdownTimeout: 5000,
+    },
+
+    logger: {
+        // Path to log files
+        logPath: path.resolve('./logs'),
+        // Log level (available levels: 'debug', 'info', 'warn' and 'error')
+        level: 'debug',
+        // Maximum log size in bytes
+        maxSize: 50 * 1024 * 1024,
+        // How many rotated log files to keep
+        maxFiles: 10,
+    },
+
+    media: {
+        // Video chunk duration (in seconds)
+        fragmentDuration: 5,
+        // Path to video files
+        mediaPath: path.resolve('./media'),
+
+        // Indexing configuration
+        indexEnabled: true,
+        // Path to index files
+        indexPath: path.resolve('./index'),
+
+        // Encryption configuration
+        encryptionEnabled: false,
+        encryptionSeed: 'CIPHER SEED',
     },
 };
 

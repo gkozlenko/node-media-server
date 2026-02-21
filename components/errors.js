@@ -19,20 +19,29 @@ class NotFoundError extends HttpError {
 
 }
 
-class ForbiddenError extends HttpError {
+class RequestTimeoutError extends HttpError {
 
     constructor(message) {
-        super(403, message);
-        this.name = 'ForbiddenError';
+        super(408, message);
+        this.name = 'RequestTimeoutError';
     }
 
 }
 
-class UnauthorizedError extends HttpError {
+class InternalServerError extends HttpError {
 
     constructor(message) {
-        super(401, message);
-        this.name = 'UnauthorizedError';
+        super(500, message);
+        this.name = 'InternalServerError';
+    }
+
+}
+
+class ServiceUnavailableError extends HttpError {
+
+    constructor(message) {
+        super(503, message);
+        this.name = 'ServiceUnavailableError';
     }
 
 }
@@ -40,6 +49,7 @@ class UnauthorizedError extends HttpError {
 module.exports = {
     HttpError,
     NotFoundError,
-    ForbiddenError,
-    UnauthorizedError,
+    RequestTimeoutError,
+    InternalServerError,
+    ServiceUnavailableError,
 };
