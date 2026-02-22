@@ -1,6 +1,6 @@
 {
   "name": "node-media-server",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Node.js Media Server",
   "license": "MIT",
   "main": "index",
@@ -32,18 +32,15 @@
     "lint": "eslint \"./**/*.js\""
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.2",
-    "eslint": "^9.39.2"
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.0.1",
+    "globals": "^17.3.0"
   },
   "dependencies": {
-    "cors": "^2.8.5",
+    "cors": "^2.8.6",
     "express": "^5.2.0",
-    "lodash": "^4.17.23",
     "morgan": "^1.10.1",
-    "node-video-lib": "^2.4.1",
+    "node-video-lib": "^2.5.0",
     "winston": "^3.19.0"
-  },
-  "overrides": {
-    "qs": "^6.14.1"
   }
 }

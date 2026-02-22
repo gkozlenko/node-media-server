@@ -2,92 +2,100 @@
 
 const config = require('../../config');
 const errors = require('../../components/errors');
+const cipher = require('../../components/cipher');
 
-const _ = require('lodash');
 const path = require('path');
 const express = require('express');
 const router = express.Router();
 
-const VideoLib = require('node-video-lib');
-const Movie = require('../../components/movie');
+const FragmentListDto = require('../../models/fragment-list-dto');
 
-router.get(/^(.*)\/playlist\.m3u8$/, Movie.openMovie, (req, res) => {
-    let streamAttributes = {
+router.get(/^\/(.+)\/playlist\.m3u8$/, async (req, res) => {
+    const payload = await req.callWorker({
+        action: 'getFragmentList',
+        filename: req.params[0],
+    });
+    const fragmentList = new FragmentListDto(payload);
+
+    const streamAttributes = {
         'program-id': 1,
     };
 
-    let duration = req.fragmentList.relativeDuration();
-    if (duration > 0) {
-        streamAttributes.bandwidth = Math.round(8 * req.fragmentList.size() / duration);
+    if (fragmentList.bandwidth() > 0) {
+        streamAttributes.bandwidth = fragmentList.bandwidth();
     }
 
-    if (req.fragmentList.video) {
-        streamAttributes.resolution = [req.fragmentList.video.width, req.fragmentList.video.height].join('x');
-        let codecs = [req.fragmentList.video, req.fragmentList.audio]
-            .filter(data => data !== null)
-            .map(data => data.codec)
-            .filter(codec => Boolean(codec))
-            .join(',');
-        if (codecs !== '') {
-            streamAttributes.codecs = `"${codecs}"`;
-        }
+    if (fragmentList.videoResolution() !== null) {
+        streamAttributes.resolution = fragmentList.videoResolution();
     }
 
-    let streamAttributesPairs = _.toPairs(streamAttributes).map(pair => `${pair[0].toUpperCase()}=${pair[1]}`);
-    let playlist = [
+    if (fragmentList.codecStrings().length) {
+        streamAttributes.codecs = fragmentList.codecStrings().join(',');
+    }
+
+    const streamAttributesPairs = Object.entries(streamAttributes)
+        .map(([key, value]) => `${key.toUpperCase()}=${value}`);
+
+    const playlist = [
         '#EXTM3U',
         '#EXT-X-VERSION:3',
         `#EXT-X-STREAM-INF:${streamAttributesPairs.join(',')}`,
         path.join(req.baseUrl, req.params[0], 'chunklist.m3u8').replace(/\\/g, '/'),
         '',
     ];
-    res.set('Content-Type', 'application/x-mpegURL');
+
+    res.set('Content-Type', 'application/vnd.apple.mpegurl');
     res.send(playlist.join('\n'));
 });
 
-router.get(/^(.*)\/chunklist\.m3u8$/, Movie.openMovie, (req, res) => {
-    let keyUrl = path.join(req.baseUrl, req.params[0], 'drm.key').replace(/\\/g, '/');
-    let playlist = [
+router.get(/^\/(.+)\/chunklist\.m3u8$/, async (req, res) => {
+    const payload = await req.callWorker({
+        action: 'getFragmentList',
+        filename: req.params[0],
+    });
+    const fragmentList = new FragmentListDto(payload);
+
+    const playlist = [
         '#EXTM3U',
         '#EXT-X-VERSION:3',
-        `#EXT-X-TARGETDURATION:${req.fragmentList.fragmentDuration}`,
+        `#EXT-X-TARGETDURATION:${Math.ceil(fragmentList.maxFragmentDuration())}`,
         '#EXT-X-MEDIA-SEQUENCE:1',
     ];
-    if (config.drmEnabled) {
-        playlist.push(`#EXT-X-KEY:METHOD=AES-128,URI="${keyUrl}",IV=0x${Movie.movieIv(req.params[0]).toString('hex')}`);
+
+    if (config.media.encryptionEnabled) {
+        const keyUrl = path.join(req.baseUrl, req.params[0], 'encryption.key').replace(/\\/g, '/');
+        playlist.push(`#EXT-X-KEY:METHOD=AES-128,URI="${keyUrl}",IV=0x${cipher.cipherIv(req.params[0]).toString('hex')}`);
     }
-    for (let i = 0, l = req.fragmentList.count(); i < l; i++) {
-        playlist.push(`#EXTINF:${req.fragmentList.get(i).relativeDuration().toFixed(3)},`);
-        playlist.push(path.join(req.baseUrl, req.params[0], `media-${i + 1}.ts`).replace(/\\/g, '/'));
+
+    for (const [index, duration] of fragmentList.fragmentDurations().entries()) {
+        playlist.push(`#EXTINF:${duration.toFixed(3)},`);
+        playlist.push(path.join(req.baseUrl, req.params[0], `media-${index + 1}.ts`).replace(/\\/g, '/'));
     }
-    playlist.push('#EXT-X-ENDLIST');
-    playlist.push('');
-    res.set('Content-Type', 'application/x-mpegURL');
+
+    playlist.push('#EXT-X-ENDLIST', '');
+
+    res.set('Content-Type', 'application/vnd.apple.mpegurl');
     res.send(playlist.join('\n'));
 });
 
-router.get(/^(.*)\/media-(\d+)\.ts$/, Movie.openMovie, (req, res) => {
-    let index = parseInt(req.params[1], 10);
-    if (req.fragmentList.count() < index) {
-        throw new errors.NotFoundError('Chunk Not Found');
-    }
-    let fragment = req.fragmentList.get(index - 1);
-    let sampleBuffers = VideoLib.FragmentReader.readSamples(fragment, req.file);
-    let buffer = VideoLib.HLSPacketizer.packetize(fragment, sampleBuffers);
+router.get(/^\/(.+)\/media-(\d+)\.ts$/, async (req, res) => {
+    const payload = await req.callWorker({
+        action: 'getChunk',
+        filename: req.params[0],
+        chunkIndex: parseInt(req.params[1], 10) - 1,
+        useEncryption: config.media.encryptionEnabled,
+    });
+
     res.set('Content-Type', 'video/MP2T');
-    if (config.drmEnabled) {
-        res.send(Movie.encryptChunk(req.params[0], buffer));
-    } else {
-        res.send(buffer);
-    }
+    res.end(Buffer.from(payload.buffer));
 });
 
-router.get(/^(.*)\/drm\.key$/, (req, res) => {
-    if (config.drmEnabled) {
-        res.send(Movie.movieKey(req.params[0]));
-    } else {
-        throw new errors.NotFoundError('Key Not Found');
+router.get(/^\/(.+)\/encryption\.key$/, (req, res) => {
+    if (!config.media.encryptionEnabled) {
+        throw new errors.NotFoundError('Encryption key not found');
     }
+
+    res.send(cipher.cipherKey(req.params[0]));
 });
 
 module.exports = router;

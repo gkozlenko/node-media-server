@@ -5,33 +5,33 @@ const winston = require('winston');
 const path = require('path');
 
 const logFormat = winston.format.printf(({ level, message, timestamp, label, stack }) => {
-    return `[${timestamp}] [${level.toUpperCase()}] ${label || 'app'} - ${stack || message}`;
+    const logMessage = stack ? `${message}\n${stack}` : message;
+    return `[${timestamp}] [${level.toUpperCase()}] ${label || 'app'} - ${logMessage}`;
 });
+
+const baseFormat = winston.format.combine(
+    winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+    winston.format.errors({ stack: true }),
+    winston.format.splat(),
+    logFormat,
+);
 
 function createFileTransport(filename, level) {
     return new winston.transports.File({
-        filename: path.join(config.logsPath, filename),
+        filename: path.join(config.logger.logPath, filename),
         level: level,
-        maxsize: config.logSize,
-        maxFiles: config.logKeep,
+        maxsize: config.logger.maxSize,
+        maxFiles: config.logger.maxFiles,
         tailable: true,
-        format: winston.format.combine(
-            winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-            winston.format.splat(),
-            logFormat,
-        ),
+        format: baseFormat,
     });
 }
 
 const rootLogger = winston.createLogger({
-    level: config.logLevel,
+    level: config.logger.level,
     transports: [
         new winston.transports.Console({
-            format: winston.format.combine(
-                winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-                winston.format.splat(),
-                logFormat,
-            ),
+            format: baseFormat,
         }),
         createFileTransport('debug.log', 'debug'),
         createFileTransport('info.log', 'info'),

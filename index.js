@@ -1,98 +1,94 @@
 'use strict';
 
-const cluster = require('cluster');
 const config = require('./config');
-const logger = require('./components/logger').getLogger('app');
-const _ = require('lodash');
+const logger = require('./components/logger').getLogger('server');
 const path = require('path');
 
-let shutdownInterval = null;
-let workers = {};
+const { Worker, MessageChannel } = require('worker_threads');
 
-function startWorker(name) {
-    const worker = cluster.fork({WORKER_NAME: name}).on('online', () => {
-        logger.info('Start %s worker #%d.', name, worker.id);
-        workers[name] = workers[name] || [];
-        workers[name].push(worker.id);
-    }).on('message', (message) => {
-        logger.debug('Message from worker #' + worker.id + ':', message);
-        if (message.action) {
-            switch (message.action) {
-                case 'index': {
-                    let indexer = cluster.workers[_.sample(workers.indexer || [])];
-                    if (indexer) {
-                        indexer.send(message);
-                    } else {
-                        logger.debug('Indexer worker not found.');
-                    }
-                    break;
-                }
-            }
-        }
-    }).on('exit', (status) => {
-        workers[name] = _.without(workers[name], worker.id);
-        if (worker.exitedAfterDisconnect === true || status === 0) {
-            logger.info('Worker %s #%d was killed.', name, worker.id);
+let web = null;
+const workers = new Map();
+
+function startWorker(id) {
+    const name = `worker-${id}`;
+
+    const worker = new Worker(path.join(__dirname, 'workers', 'media.js'), {
+        workerData: { name: name },
+    });
+
+    const { port1, port2 } = new MessageChannel();
+    worker.postMessage({ action: 'updateWebChannel', port: port2 }, [port2]);
+    web.postMessage({ action: 'updateWorkerChannel', id: id, port: port1 }, [port1]);
+
+    worker.on('exit', (code) => {
+        if (code !== 0) {
+            logger.warn(`Worker #${id} crashed with code ${code}. Restarting in 1s...`);
+            workers.delete(id);
+            setTimeout(() => {
+                startWorker(id);
+            }, 1000);
         } else {
-            logger.warn('Worker %s #%d was died. Replace it with a new one.', name, worker.id);
-            startWorker(name);
+            logger.info(`Worker #${id} stopped gracefully.`);
         }
     });
+
+    worker.on('error', (err) => {
+        logger.error(`Worker #${id} error:`, err);
+    });
+
+    workers.set(id, worker);
+    logger.info(`Worker #${id} started.`);
 }
 
-function shutdownCluster() {
-    if (cluster.isPrimary) {
-        clearInterval(shutdownInterval);
-        if (_.size(cluster.workers) > 0) {
-            logger.info('Shutdown workers:', _.size(cluster.workers));
-            _.each(cluster.workers, (worker) => {
-                try {
-                    worker.send({action: 'shutdown'});
-                } catch (err) {
-                    logger.warn('Cannot send shutdown message to worker:', err);
-                }
-            });
-            shutdownInterval = setInterval(() => {
-                if (_.size(cluster.workers) === 0) {
-                    process.exit();
-                }
-            }, config.shutdownInterval);
-        } else {
-            process.exit();
+function start() {
+    logger.info('Starting media server...');
+
+    web = new Worker(path.join(__dirname, 'workers', 'web.js'));
+
+    web.on('exit', (code) => {
+        if (code !== 0) {
+            logger.error('Web worker crashed. Shutting down media server.');
+            process.exit(1);
         }
+    });
+
+    for (let i = 0; i < config.workers.count; i++) {
+        startWorker(i);
     }
 }
 
-if (cluster.isPrimary) {
-    _.each(config.workers, (conf, name) => {
-        if (conf.enabled) {
-            for (let i = 0; i < conf.count; i++) {
-                startWorker(name);
-            }
-        }
-    });
-} else {
-    const name = process.env.WORKER_NAME;
-    const WorkerClass = require(path.join(__dirname, 'workers', `${name}.js`));
-    let worker = null;
-    if (WorkerClass) {
-        worker = new WorkerClass(name, config.workers[name]);
-        worker.start();
-        worker.on('stop', () => {
-            process.exit();
-        });
+function shutdown() {
+    logger.info('Stopping media server...');
+
+    const exitPromises = [];
+
+    if (web) {
+        exitPromises.push(new Promise((resolve) => {
+            web.once('exit', resolve);
+            web.postMessage({ action: 'shutdown' });
+        }));
     }
-    process.on('message', (message) => {
-        if (message.action === 'shutdown') {
-            if (worker) {
-                worker.stop();
-            } else {
-                process.exit();
-            }
-        }
+
+    for (const worker of workers.values()) {
+        exitPromises.push(new Promise((resolve) => {
+            worker.once('exit', resolve);
+            worker.postMessage({ action: 'shutdown' });
+        }));
+    };
+
+    const forceTimeout = setTimeout(() => {
+        logger.error('Shutdown timed out. Forcing exit.');
+        process.exit(1);
+    }, config.server.shutdownTimeout || 10000);
+
+    Promise.all(exitPromises).then(() => {
+        clearTimeout(forceTimeout);
+        logger.info('Server successfully stopped.');
+        process.exit(0);
     });
 }
 
-// Shutdown
-process.on('SIGTERM', shutdownCluster);
-process.on('SIGINT', shutdownCluster);
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
+
+start();
